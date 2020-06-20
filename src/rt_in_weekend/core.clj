@@ -1,5 +1,6 @@
 (ns rt-in-weekend.core
-  (:require [rt-in-weekend.image :as img]))
+  (:require [rt-in-weekend.image :as img]
+            [rt-in-weekend.vec :as vec]))
 
 (defn ppm-header [width height]
   (str "P3\n" width " " height "\n255\n"))

@@ -4,5 +4,6 @@
            (java.awt.image BufferedImage)))
 
 (defn save-ppm [^String ppm ^String path]
-  (println "Savin PPM: " path)
-  (spit path ppm))
+  (println "Saving PPM: " path)
+  (spit path ppm)
+  (println "Done Saving PPM: " path))
