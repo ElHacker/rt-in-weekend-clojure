@@ -13,3 +13,11 @@
 (defn point-at [ray t]
   (vec/+ (origin ray)
          (vec/* (direction ray) t)))
+
+(defn hit-sphere [center radius {:keys [origin direction]}]
+  (let [oc (vec/- origin center)
+        a (vec/dot direction direction)
+        b (* 2.0 (vec/dot oc direction))
+        c (- (vec/dot oc oc) (* radius radius))
+        discriminant (- (* b b) (* 4 a c))]
+    (> discriminant 0)))

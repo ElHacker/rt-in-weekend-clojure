@@ -15,13 +15,15 @@
         ppm (str header body)]
     (img/save-ppm ppm path)))
 
-(defn color [r]
-  (let [unit-direction (vec/unit-vector (ray/direction r))
-        t (* 0.5 (+ (vec/y unit-direction) 1.0))]
-    (vec/+ (vec/* [1.0 1.0 1.0] (- 1.0 t))
-           (vec/* [0.5 0.7 1.0] t))))
+(defn ray-color [r]
+  (if (ray/hit-sphere [0 0 -1] 0.5 r)
+    [1 0 0] ; draw red color
+    (let [unit-direction (vec/unit-vector (ray/direction r))
+          t (* 0.5 (+ (vec/y unit-direction) 1.0))]
+      (vec/+ (vec/* [1.0 1.0 1.0] (- 1.0 t))
+             (vec/* [0.5 0.7 1.0] t)))))
 
-(defn simple-background []
+(defn simple-background-and-sphere []
   (let [aspect_ratio (/ 16.0 9.0)
         image_width 384
         image_height (int (/ image_width aspect_ratio))
@@ -31,26 +33,24 @@
         horizontal [viewport_width 0.0 0.0]
         vertical [0.0 viewport_height 0.0]
         origin [0.0 0.0 0.0]
-        lower-left-corner (vec/- origin
-                             (vec/-
-                               (vec/- (vec// horizontal 2)
-                                      (vec// vertical 2))
-                               [0.0 0.0 focal_length]))]
+        lower-left-corner (vec/- (vec/- (vec/- origin (vec// horizontal 2))
+                                        (vec// vertical 2))
+                                 [0.0 0.0 focal_length])]
     (raytrace image_width image_height
               (for [j (range (dec image_height) -1 -1)
                     i (range 0 image_width)
-                    :let [u (/ i (dec image_width))
-                          v (/ j (dec image_height))
+                    :let [u (/ (double i) (dec image_width))
+                          v (/ (double j) (dec image_height))
                           r (ray/make origin (vec/- (vec/+ lower-left-corner
                                                            (vec/+ (vec/* horizontal u)
                                                                   (vec/* vertical v)))
                                                     origin))
-                          col (color r)
-                          ir (int (* 255.999 (vec/x col)))
-                          ig (int (* 255.999 (vec/y col)))
-                          ib (int (* 255.999 (vec/z col)))]]
+                          color (ray-color r)
+                          ir (int (* 255.999 (vec/x color)))
+                          ig (int (* 255.999 (vec/y color)))
+                          ib (int (* 255.999 (vec/z color)))]]
                 (pixel-line ir ig ib))
-              "./images/background")))
+              "./images/background-sphere")))
 
 (defn create-ppm []
   (let [image_width 256,
@@ -67,4 +67,4 @@
     (img/save-ppm ppm "./images/image")))
 
 (comment (create-ppm))
-(simple-background)
+(simple-background-and-sphere)
