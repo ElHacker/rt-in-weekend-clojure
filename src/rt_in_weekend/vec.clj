@@ -14,7 +14,7 @@
 
 (defn * [v1 v2]
   (if (number? v2)
-    (map #(clj/* n %) v1)
+    (map #(clj/* v2 %) v1)
     (mute clj/* v1 v2)))
 
 (defn / [v1 v2]
