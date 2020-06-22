@@ -16,12 +16,15 @@
     (img/save-ppm ppm path)))
 
 (defn ray-color [r]
-  (if (ray/hit-sphere [0 0 -1] 0.5 r)
-    [1 0 0] ; draw red color
-    (let [unit-direction (vec/unit-vector (ray/direction r))
-          t (* 0.5 (+ (vec/y unit-direction) 1.0))]
-      (vec/+ (vec/* [1.0 1.0 1.0] (- 1.0 t))
-             (vec/* [0.5 0.7 1.0] t)))))
+  (let [t (ray/hit-sphere [0.0 0.0 -1.0] 0.5 r)]
+    (if (pos? t)
+      (let [N (vec/unit-vector (vec/- (ray/point-at r t)
+                                      [0.0, 0.0, -1.0]))]
+        (vec/* (map inc N) 0.5))
+      (let [unit-direction (vec/unit-vector (ray/direction r))
+            t (* 0.5 (inc (vec/y unit-direction)))]
+        (vec/+ (vec/* [1.0 1.0 1.0] (- 1.0 t))
+               (vec/* [0.5 0.7 1.0] t))))))
 
 (defn simple-background-and-sphere []
   (let [aspect_ratio (/ 16.0 9.0)
@@ -50,7 +53,7 @@
                           ig (int (* 255.999 (vec/y color)))
                           ib (int (* 255.999 (vec/z color)))]]
                 (pixel-line ir ig ib))
-              "./images/background-sphere")))
+              "./images/background-sphere-surface")))
 
 (defn create-ppm []
   (let [image_width 256,

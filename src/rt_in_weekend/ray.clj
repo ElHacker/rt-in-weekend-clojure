@@ -20,4 +20,8 @@
         b (* 2.0 (vec/dot oc direction))
         c (- (vec/dot oc oc) (* radius radius))
         discriminant (- (* b b) (* 4 a c))]
-    (> discriminant 0)))
+    (if (neg? discriminant)
+      -1.0
+      (/ (- (- b)
+            (Math/sqrt discriminant))
+         (* 2.0 a)))))

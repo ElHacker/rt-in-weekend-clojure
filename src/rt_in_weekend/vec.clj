@@ -33,11 +33,11 @@
    (clj/- (clj/* x1 y2) (clj/* y1 x2))])
 
 (defn unit-vector [v]
-  (vec (for [elem v]
-         (clj// elem (count v)))))
+  (let [l (length v)]
+    (map #(clj// % l) v)))
 
 (defn length-squared [v]
-  (reduce + (map #(clj/* % %) v)))
+  (reduce clj/+ (map #(clj/* % %) v)))
 
 (defn length [v]
   (Math/sqrt (length-squared v)))
