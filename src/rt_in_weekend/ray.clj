@@ -16,12 +16,12 @@
 
 (defn hit-sphere [center radius {:keys [origin direction]}]
   (let [oc (vec/- origin center)
-        a (vec/dot direction direction)
-        b (* 2.0 (vec/dot oc direction))
-        c (- (vec/dot oc oc) (* radius radius))
-        discriminant (- (* b b) (* 4 a c))]
+        a (vec/length-squared direction)
+        half_b (vec/dot oc direction)
+        c (- (vec/length-squared oc) (* radius radius))
+        discriminant (- (* half_b half_b) (* a c))]
     (if (neg? discriminant)
       -1.0
-      (/ (- (- b)
+      (/ (- (- half_b)
             (Math/sqrt discriminant))
-         (* 2.0 a)))))
+         a))))
