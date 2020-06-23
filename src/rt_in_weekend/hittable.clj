@@ -7,7 +7,7 @@
 
 (defn hit-record [r t center radius]
   (let [p (ray/point-at r t)
-        outward-normal (/ (- p center) radius)
+        outward-normal (vec// (vec/- p center) radius)
         front-face (< (vec/dot (:direction r) outward-normal) 0)]
     {:t t :p p :normal (if front-face outward-normal (- outward-normal))}))
 
@@ -27,3 +27,14 @@
             (let [temp (/ (+ (- half-b) root) a)]
               (when (and (< temp t-max) (> temp t-min))
                 (hit-record r temp (:center this) (:radius this))))))))))
+
+(defn hittable-list [world r t-min t-max]
+  (let [closest-so-far (atom t-max)
+        record (atom nil)]
+    (doseq [i (range 0 (count world))]
+      (do
+        (if-let [rec (hit (get world i) r t-min @closest-so-far)]
+          (do
+            (reset! closest-so-far (:t rec))
+            (reset! record rec)))))
+    @record))
