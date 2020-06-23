@@ -32,15 +32,15 @@
    (clj/- (clj/* z1 x2) (clj/* x1 z2))
    (clj/- (clj/* x1 y2) (clj/* y1 x2))])
 
-(defn unit-vector [v]
-  (let [l (length v)]
-    (map #(clj// % l) v)))
-
 (defn length-squared [v]
   (reduce clj/+ (map #(clj/* % %) v)))
 
 (defn length [v]
   (Math/sqrt (length-squared v)))
+
+(defn unit-vector [v]
+  (let [l (length v)]
+    (map #(clj// % l) v)))
 
 (defn x [v]
   (first v))
