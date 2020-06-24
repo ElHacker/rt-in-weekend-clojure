@@ -70,11 +70,12 @@
               (for [j (range (dec image-height) -1 -1)
                     i (range 0 image-width)
                     :let [color (evolve-color world cam image-width image-height num-samples i j max-depth)
-                          ir (int (* 255.999 (vec/x color)))
-                          ig (int (* 255.999 (vec/y color)))
-                          ib (int (* 255.999 (vec/z color)))]]
+                          corrected-color (map #(Math/sqrt %) color)
+                          ir (int (* 255.999 (vec/x corrected-color)))
+                          ig (int (* 255.999 (vec/y corrected-color)))
+                          ib (int (* 255.999 (vec/z corrected-color)))]]
                 (pixel-line ir ig ib))
-              "./images/background-sphere-surface-antialias-diffuse")))
+              "./images/background-sphere-surface-antialias-diffuse-corrected")))
 
 (defn create-ppm []
   (let [image-width 256,
