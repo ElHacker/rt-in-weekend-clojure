@@ -6,4 +6,5 @@
   :dependencies [[org.clojure/clojure "1.10.1"]]
   :main ^:skip-aot rt-in-weekend.core
   :target-path "target/%s"
-  :profiles {:uberjar {:aot :all}})
+  :profiles {:uberjar {:aot :all}}
+  :repl-options {:timeout 120000})
