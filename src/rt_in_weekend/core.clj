@@ -17,6 +17,7 @@
         ppm (str header body)]
     (img/save-ppm ppm path)))
 
+; Diffuse material hack
 (defn random-in-unit-sphere []
   (let [random-vec #(vec/-
                       (vec/* [(rand) (rand) (rand)] 2.0)
@@ -28,11 +29,19 @@
         (reset! p (random-vec))))
     @p))
 
+; Lambertian diffuse aproximation
 (defn random-unit-vector []
   (let [a (* 2 Math/PI (rand))
         z (+ (- 1) (* 2 (rand)))
         r (Math/sqrt (- 1 (* z z)))]
     [(* r (Math/cos a)) (* r (Math/sin a)) z]))
+
+; Hemispherical scattering
+(defn random-in-hemisphere [normal]
+  (let [in-unit-sphere (random-in-unit-sphere)]
+    (if (> (vec/dot in-unit-sphere normal) 0.0) ; in the same hemisphere as the normal
+      in-unit-sphere
+      (vec/* in-unit-sphere -1))))
 
 (defn ray-color [r world depth]
   (if-let [rec (hittable/hittable-list world r 0.0001 Float/MAX_VALUE)]
