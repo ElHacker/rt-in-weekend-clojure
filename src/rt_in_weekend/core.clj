@@ -28,9 +28,15 @@
         (reset! p (random-vec))))
     @p))
 
+(defn random-unit-vector []
+  (let [a (* 2 Math/PI (rand))
+        z (+ (- 1) (* 2 (rand)))
+        r (Math/sqrt (- 1 (* z z)))]
+    [(* r (Math/cos a)) (* r (Math/sin a)) z]))
+
 (defn ray-color [r world depth]
   (if-let [rec (hittable/hittable-list world r 0.0001 Float/MAX_VALUE)]
-    (let [target (vec/+ (vec/+ (:p rec) (:normal rec)) (random-in-unit-sphere))]
+    (let [target (vec/+ (vec/+ (:p rec) (:normal rec)) (random-unit-vector))]
       (if (<= depth 0)
         [0 0 0]
         (vec/* (ray-color (ray/make (:p rec) (vec/- target (:p rec))) world (dec depth)) 0.5)))
@@ -75,7 +81,7 @@
                           ig (int (* 255.999 (vec/y corrected-color)))
                           ib (int (* 255.999 (vec/z corrected-color)))]]
                 (pixel-line ir ig ib))
-              "./images/background-sphere-surface-antialias-diffuse-corrected")))
+              "./images/background-sphere-surface-antialias-diffuse-lambertian")))
 
 (defn create-ppm []
   (let [image-width 256,
