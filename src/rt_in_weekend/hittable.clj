@@ -5,13 +5,13 @@
 (defprotocol Hittable
   (hit [this r t-min t-max]))
 
-(defn hit-record [r t center radius]
+(defn hit-record [r t center radius material]
   (let [p (ray/point-at r t)
         outward-normal (vec// (vec/- p center) radius)
         front-face (< (vec/dot (:direction r) outward-normal) 0)]
-    {:t t :p p :normal (if front-face outward-normal (- outward-normal))}))
+    {:t t :p p :normal (if front-face outward-normal (- outward-normal)) :material material}))
 
-(defrecord Sphere [center radius]
+(defrecord Sphere [center radius material]
   Hittable
   (hit [this r t-min t-max]
     (let [oc (vec/- (ray/origin r) (:center this))
@@ -23,10 +23,10 @@
         (let [root (Math/sqrt discriminant)
               temp (/ (- (- half-b) root) a)]
           (if (and (< temp t-max) (> temp t-min))
-            (hit-record r temp (:center this) (:radius this))
+            (hit-record r temp (:center this) (:radius this) (:material this))
             (let [temp (/ (+ (- half-b) root) a)]
               (when (and (< temp t-max) (> temp t-min))
-                (hit-record r temp (:center this) (:radius this))))))))))
+                (hit-record r temp (:center this) (:radius this) (:material this))))))))))
 
 (defn hittable-list [world r t-min t-max]
   (let [closest-so-far (atom t-max)

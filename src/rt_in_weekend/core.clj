@@ -3,7 +3,8 @@
             [rt-in-weekend.vec :as vec]
             [rt-in-weekend.ray :as ray]
             [rt-in-weekend.hittable :as hittable]
-            [rt-in-weekend.camera :as camera]))
+            [rt-in-weekend.camera :as camera]
+            [rt-in-weekend.material :as material]))
 
 (defn ppm-header [width height]
   (str "P3\n" width " " height "\n255\n"))
@@ -17,38 +18,12 @@
         ppm (str header body)]
     (img/save-ppm ppm path)))
 
-; Diffuse material hack
-(defn random-in-unit-sphere []
-  (let [random-vec #(vec/-
-                      (vec/* [(rand) (rand) (rand)] 2.0)
-                      [1.0 1.0 1.0])
-        p (atom nil)]
-    (do
-      (reset! p (random-vec))
-      (while (>= (vec/length-squared @p) 1.0)
-        (reset! p (random-vec))))
-    @p))
-
-; Lambertian diffuse aproximation
-(defn random-unit-vector []
-  (let [a (* 2 Math/PI (rand))
-        z (+ (- 1) (* 2 (rand)))
-        r (Math/sqrt (- 1 (* z z)))]
-    [(* r (Math/cos a)) (* r (Math/sin a)) z]))
-
-; Hemispherical scattering
-(defn random-in-hemisphere [normal]
-  (let [in-unit-sphere (random-in-unit-sphere)]
-    (if (> (vec/dot in-unit-sphere normal) 0.0) ; in the same hemisphere as the normal
-      in-unit-sphere
-      (vec/* in-unit-sphere -1))))
-
 (defn ray-color [r world depth]
   (if-let [rec (hittable/hittable-list world r 0.0001 Float/MAX_VALUE)]
-    (let [target (vec/+ (vec/+ (:p rec) (:normal rec)) (random-unit-vector))]
-      (if (<= depth 0)
-        [0 0 0]
-        (vec/* (ray-color (ray/make (:p rec) (vec/- target (:p rec))) world (dec depth)) 0.5)))
+    (let [result (material/scatter (:material rec) r rec)]
+      (if (and (> depth 0) (:ok result))
+        (vec/* (:attenuation result) (ray-color (:scattered result) world (dec depth)))
+        [0 0 0]))
     (let [unit-direction (vec/unit-vector (ray/direction r))
           t (* 0.5 (inc (vec/y unit-direction)))]
       (vec/+ (vec/* [1.0 1.0 1.0] (- 1.0 t))
@@ -78,8 +53,10 @@
         lower-left-corner (vec/- (vec/- (vec/- origin (vec// horizontal 2))
                                         (vec// vertical 2))
                                  [0.0 0.0 focal_length])
-        world [(hittable/->Sphere [0 0 -1] 0.5)
-               (hittable/->Sphere [0 -100.5 -1] 100)]
+        world [(hittable/->Sphere [0 0 -1] 0.5 (material/->Lambertian [0.7 0.3 0.3]))
+               (hittable/->Sphere [0 -100.5 -1] 100 (material/->Lambertian [0.8 0.8 0.0]))
+               (hittable/->Sphere [1 0 -1] 0.5 (material/->Metal [0.8 0.6 0.2]))
+               (hittable/->Sphere [-1 0 -1] 0.5 (material/->Metal [0.8 0.8 0.8]))]
         cam(camera/make lower-left-corner horizontal vertical origin)]
     (raytrace image-width image-height
               (for [j (range (dec image-height) -1 -1)
@@ -90,7 +67,7 @@
                           ig (int (* 255.999 (vec/y corrected-color)))
                           ib (int (* 255.999 (vec/z corrected-color)))]]
                 (pixel-line ir ig ib))
-              "./images/background-sphere-surface-antialias-diffuse-lambertian")))
+              "./images/background-sphere-metal")))
 
 (defn create-ppm []
   (let [image-width 256,

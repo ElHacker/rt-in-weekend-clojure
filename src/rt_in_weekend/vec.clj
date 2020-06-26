@@ -50,3 +50,7 @@
 
 (defn z [v]
   (last v))
+
+(defn reflect [v n]
+  (let [m (* n (clj/* (dot v n) 2))]
+    (- v m)))
