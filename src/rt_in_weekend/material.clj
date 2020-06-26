@@ -53,6 +53,13 @@
     (let [attenuation [1.0 1.0 1.0]
           etai-over-etat (if (:front-face rec) (/ 1.0 ref_idx) ref_idx)
           unit-direction (vec/unit-vector (:direction r-in))
-          refracted (vec/refract unit-direction (:normal rec) etai-over-etat)
-          scattered (ray/make (:p rec) refracted)]
+          cos-theta (min (vec/dot (vec/- unit-direction) (:normal rec)) 1.0)
+          sin-theta (Math/sqrt (- 1.0 (* cos-theta cos-theta)))
+          can-refract (<= (* etai-over-etat sin-theta) 1.0)
+          refracted (if can-refract
+                      (vec/refract unit-direction (:normal rec) etai-over-etat)
+                      (vec/reflect unit-direction (:normal rec)))
+          scattered (if can-refract
+                      (ray/make (:p rec) refracted)
+                      (ray/make (:p rec) reflected))]
       {:ok true :attenuation attenuation :scattered scattered})))
