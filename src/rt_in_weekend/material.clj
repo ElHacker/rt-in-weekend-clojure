@@ -26,7 +26,7 @@
   (let [in-unit-sphere (random-in-unit-sphere)]
     (if (> (vec/dot in-unit-sphere normal) 0.0) ; in the same hemisphere as the normal
       in-unit-sphere
-      (vec/* in-unit-sphere -1))))
+      (vec/- in-unit-sphere))))
 
 (defprotocol Material
   (scatter [this r-in rec]))
@@ -46,3 +46,13 @@
           scattered (ray/make (:p rec) (vec/+ reflected (vec/* (random-in-unit-sphere) fuzz)))
           final (vec/dot (:direction scattered) (:normal rec))]
       {:ok (pos? final) :attenuation (:albedo this) :scattered scattered})))
+
+(defrecord Dialectric [ref_idx]
+  Material
+  (scatter [this r-in rec]
+    (let [attenuation [1.0 1.0 1.0]
+          etai-over-etat (if (:front-face rec) (/ 1.0 ref_idx) ref_idx)
+          unit-direction (vec/unit-vector (:direction r-in))
+          refracted (vec/refract unit-direction (:normal rec) etai-over-etat)
+          scattered (ray/make (:p rec) refracted)]
+      {:ok true :attenuation attenuation :scattered scattered})))

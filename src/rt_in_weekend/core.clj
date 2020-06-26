@@ -53,10 +53,10 @@
         lower-left-corner (vec/- (vec/- (vec/- origin (vec// horizontal 2))
                                         (vec// vertical 2))
                                  [0.0 0.0 focal_length])
-        world [(hittable/->Sphere [0 0 -1] 0.5 (material/->Lambertian [0.7 0.3 0.3]))
+        world [(hittable/->Sphere [0 0 -1] 0.5 (material/->Dialectric 1.7))
                (hittable/->Sphere [0 -100.5 -1] 100 (material/->Lambertian [0.8 0.8 0.0]))
                (hittable/->Sphere [1 0 -1] 0.5 (material/->Metal [0.8 0.6 0.2] 1.0))
-               (hittable/->Sphere [-1 0 -1] 0.5 (material/->Metal [0.8 0.8 0.8] 0.3))]
+               (hittable/->Sphere [-1 0 -1] 0.5 (material/->Dialectric 1.7))]
         cam(camera/make lower-left-corner horizontal vertical origin)]
     (raytrace image-width image-height
               (for [j (range (dec image-height) -1 -1)
@@ -67,7 +67,7 @@
                           ig (int (* 255.999 (vec/y corrected-color)))
                           ib (int (* 255.999 (vec/z corrected-color)))]]
                 (pixel-line ir ig ib))
-              "./images/background-sphere-metal-fuzzed")))
+              "./images/background-sphere-glass")))
 
 (defn create-ppm []
   (let [image-width 256,

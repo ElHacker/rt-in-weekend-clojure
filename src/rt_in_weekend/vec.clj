@@ -9,13 +9,15 @@
 (defn + [v1 v2]
   (mute clj/+ v1 v2))
 
-(defn - [v1 v2]
-  (mute clj/- v1 v2))
 
 (defn * [v1 v2]
   (if (number? v2)
     (map #(clj/* v2 %) v1)
     (mute clj/* v1 v2)))
+
+(defn -
+  ([v] (* v -1))
+  ([v1 v2] (mute clj/- v1 v2)))
 
 (defn / [v1 v2]
   (if (number? v2)
@@ -54,3 +56,9 @@
 (defn reflect [v n]
   (let [m (* n (clj/* (dot v n) 2))]
     (- v m)))
+
+(defn refract [uv n etai-over-etat]
+  (let [cos-theta (dot (- uv) n)
+        r-out-parallel (* (+ uv (* n cos-theta)) etai-over-etat)
+        r-out-perp (* n (clj/- (Math/sqrt (clj/- 1 (length-squared r-out-parallel)))))]
+    (+ r-out-parallel r-out-perp)))

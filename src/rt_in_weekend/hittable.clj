@@ -9,7 +9,7 @@
   (let [p (ray/point-at r t)
         outward-normal (vec// (vec/- p center) radius)
         front-face (< (vec/dot (:direction r) outward-normal) 0)]
-    {:t t :p p :normal (if front-face outward-normal (vec/* outward-normal -1)) :material material}))
+    {:t t :p p :normal (if front-face outward-normal (vec/- outward-normal)) :material material :front-face front-face}))
 
 (defrecord Sphere [center radius material]
   Hittable
