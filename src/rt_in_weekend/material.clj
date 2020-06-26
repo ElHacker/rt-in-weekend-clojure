@@ -28,6 +28,17 @@
       in-unit-sphere
       (vec/- in-unit-sphere))))
 
+;Now real glass has reflectivity that varies with angle — look at a window at a
+;steep angle and it becomes a mirror. There is a big ugly equation for that,
+;but almost everybody uses a cheap and surprisingly accurate polynomial
+;approximation by Christophe Schlick
+(defn schlick [cosine ref-idx]
+  (let [r0 (/ (- 1 ref-idx) (+ 1 ref-idx))
+        r0 (* r0 r0)]
+    (+ r0
+       (* (- 1 r0)
+          (Math/pow (- 1 cosine) 5)))))
+
 (defprotocol Material
   (scatter [this r-in rec]))
 
@@ -47,19 +58,22 @@
           final (vec/dot (:direction scattered) (:normal rec))]
       {:ok (pos? final) :attenuation (:albedo this) :scattered scattered})))
 
-(defrecord Dialectric [ref_idx]
+(defrecord Dialectric [ref-idx]
   Material
   (scatter [this r-in rec]
     (let [attenuation [1.0 1.0 1.0]
-          etai-over-etat (if (:front-face rec) (/ 1.0 ref_idx) ref_idx)
+          etai-over-etat (if (:front-face rec) (/ 1.0 ref-idx) ref-idx)
           unit-direction (vec/unit-vector (:direction r-in))
           cos-theta (min (vec/dot (vec/- unit-direction) (:normal rec)) 1.0)
           sin-theta (Math/sqrt (- 1.0 (* cos-theta cos-theta)))
           can-refract (<= (* etai-over-etat sin-theta) 1.0)
-          refracted (if can-refract
+          refracted-or-reflected (if can-refract
                       (vec/refract unit-direction (:normal rec) etai-over-etat)
                       (vec/reflect unit-direction (:normal rec)))
-          scattered (if can-refract
-                      (ray/make (:p rec) refracted)
-                      (ray/make (:p rec) reflected))]
-      {:ok true :attenuation attenuation :scattered scattered})))
+          scattered (ray/make (:p rec) refracted-or-reflected)
+          reflect-prob (schlick cos-theta etai-over-etat)]
+      (if (< (rand) reflect-prob)
+        {:ok true :attenuation attenuation :scattered (ray/make
+                                                        (:p rec)
+                                                        (vec/reflect unit-direction (:normal rec)))}
+        {:ok true :attenuation attenuation :scattered scattered}))))

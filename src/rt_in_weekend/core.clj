@@ -55,8 +55,13 @@
                                  [0.0 0.0 focal_length])
         world [(hittable/->Sphere [0 0 -1] 0.5 (material/->Lambertian [0.1 0.2 0.5]))
                (hittable/->Sphere [0 -100.5 -1] 100 (material/->Lambertian [0.8 0.8 0.0]))
-               (hittable/->Sphere [1 0 -1] 0.5 (material/->Metal [0.8 0.6 0.2] 0.0))
-               (hittable/->Sphere [-1 0 -1] 0.5 (material/->Dialectric 1.5))]
+               (hittable/->Sphere [1 0 -1] 0.5 (material/->Metal [0.8 0.6 0.2] 0.3))
+               (hittable/->Sphere [-1 0 -1] 0.5 (material/->Dialectric 1.5))
+               ; An interesting and easy trick with dielectric spheres is to
+               ; note that if you use a negative radius, the geometry is
+               ; unaffected, but the surface normal points inward. This can be
+               ; used as a bubble to make a hollow glass sphere:
+               (hittable/->Sphere [-1 0 -1] -0.45 (material/->Dialectric 1.5))]
         cam(camera/make lower-left-corner horizontal vertical origin)]
     (raytrace image-width image-height
               (for [j (range (dec image-height) -1 -1)
@@ -67,7 +72,7 @@
                           ig (int (* 255.999 (vec/y corrected-color)))
                           ib (int (* 255.999 (vec/z corrected-color)))]]
                 (pixel-line ir ig ib))
-              "./images/background-sphere-glass-refract")))
+              "./images/background-sphere-glass-hollow")))
 
 (defn create-ppm []
   (let [image-width 256,
