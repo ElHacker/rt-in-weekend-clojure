@@ -38,10 +38,11 @@
           scattered (ray/make (:p rec) (vec/- target (:p rec)))]
       {:ok true :attenuation (:albedo this) :scattered scattered})))
 
-(defrecord Metal [albedo]
+(defrecord Metal [albedo f]
   Material
   (scatter [this r-in rec]
-    (let [reflected (vec/reflect (vec/unit-vector (:direction r-in)) (:normal rec))
-          scattered (ray/make (:p rec) reflected)
+    (let [fuzz (if (< f 1) f 1)
+          reflected (vec/reflect (vec/unit-vector (:direction r-in)) (:normal rec))
+          scattered (ray/make (:p rec) (vec/+ reflected (vec/* (random-in-unit-sphere) fuzz)))
           final (vec/dot (:direction scattered) (:normal rec))]
       {:ok (pos? final) :attenuation (:albedo this) :scattered scattered})))
