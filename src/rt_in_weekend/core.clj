@@ -38,27 +38,42 @@
         (swap! color vec/+ (ray-color r world depth))))
     (vec// @color (float num-samples))))
 
-(defn simple-background-and-sphere []
+(defn make-world []
+  (let [world (atom [(hittable/->Sphere [0 -1000 0] 1000 (material/->Lambertian [0.5 0.5 0.5]))])
+        drand #(* (rand) (rand))]
+    (doseq [a (range -11 11)
+            b (range -11 11)
+            :let [choose-mat (rand)
+                  center [(+ a (* 0.9 (rand))) 0.2 (+ b (* 0.9 (rand)))]]]
+      (if (> (vec/length (vec/- center [4 0.2 0])) 0.9)
+        (cond
+          (< choose-mat 0.8) ; diffuse
+          (swap! world conj (hittable/->Sphere center 0.2 (material/->Lambertian [(drand) (drand) (drand)])))
+          (< choose-mat 0.95) ;metal
+          (swap! world conj (hittable/->Sphere center 0.2 (material/->Metal [(* 0.5 (inc (rand)))
+                                                                               (* 0.5 (inc (rand)))
+                                                                               (* 0.5 (rand))]
+                                                                               (rand))))
+          :else ;glass
+          (swap! world conj (hittable/->Sphere center 0.2 (material/->Dialectric 1.5)))
+          )))
+    (swap! world conj (hittable/->Sphere [0 1 0] 1.0 (material/->Dialectric 1.5)))
+    (swap! world conj (hittable/->Sphere [-4 1 0] 1.0 (material/->Lambertian [0.4 0.2 0.1])))
+    (swap! world conj (hittable/->Sphere [4 1 0] 1.0 (material/->Metal [0.7 0.6 0.5] 0.0)))
+    @world))
+
+(defn final-scene []
   (let [aspect-ratio (/ 16.0 9.0)
         image-width 384
         image-height (int (/ image-width aspect-ratio))
         num-samples 30
         max-depth 50
-        lookfrom [3 3 2]
-        lookat [0 0 -1]
+        lookfrom [13 2 3]
+        lookat [0 0 0]
         vup [0 1 0]
-        dist-to-focus (vec/length (vec/- lookfrom lookat))
-        aperture 2.0
-        R (Math/cos (/ Math/PI 4))
-        world [(hittable/->Sphere [0 0 -1] 0.5 (material/->Lambertian [0.1 0.2 0.5]))
-               (hittable/->Sphere [0 -100.5 -1] 100 (material/->Lambertian [0.8 0.8 0.0]))
-               (hittable/->Sphere [1 0 -1] 0.5 (material/->Metal [0.8 0.6 0.2] 0.3))
-               (hittable/->Sphere [-1 0 -1] 0.5 (material/->Dialectric 1.5))
-               ; An interesting and easy trick with dielectric spheres is to
-               ; note that if you use a negative radius, the geometry is
-               ; unaffected, but the surface normal points inward. This can be
-               ; used as a bubble to make a hollow glass sphere:
-               (hittable/->Sphere [-1 0 -1] -0.45 (material/->Dialectric 1.5))]
+        dist-to-focus 10.0
+        aperture 0.1
+        world (make-world)
         cam (camera/make lookfrom lookat vup 20 aspect-ratio aperture dist-to-focus)]
     (raytrace image-width image-height
               (for [j (range (dec image-height) -1 -1)
@@ -69,7 +84,8 @@
                           ig (int (* 255.999 (vec/y corrected-color)))
                           ib (int (* 255.999 (vec/z corrected-color)))]]
                 (pixel-line ir ig ib))
-              "./images/background-sphere-with-depth-of-field")))
+              "./images/final-scene")))
+
 
 (defn create-ppm []
   (let [image-width 256,
@@ -85,4 +101,4 @@
         ppm (str header body)]
     (img/save-ppm ppm "./images/image")))
 
-(time (simple-background-and-sphere))
+(time (final-scene))
