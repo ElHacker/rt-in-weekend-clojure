@@ -44,6 +44,11 @@
         image-height (int (/ image-width aspect-ratio))
         num-samples 30
         max-depth 50
+        lookfrom [3 3 2]
+        lookat [0 0 -1]
+        vup [0 1 0]
+        dist-to-focus (vec/length (vec/- lookfrom lookat))
+        aperture 2.0
         R (Math/cos (/ Math/PI 4))
         world [(hittable/->Sphere [0 0 -1] 0.5 (material/->Lambertian [0.1 0.2 0.5]))
                (hittable/->Sphere [0 -100.5 -1] 100 (material/->Lambertian [0.8 0.8 0.0]))
@@ -54,7 +59,7 @@
                ; unaffected, but the surface normal points inward. This can be
                ; used as a bubble to make a hollow glass sphere:
                (hittable/->Sphere [-1 0 -1] -0.45 (material/->Dialectric 1.5))]
-        cam(camera/make [-2.0 2.0 1.0] [0.0 0.0 -1.0] [0.0 1.0 0.0] 20 aspect-ratio)]
+        cam (camera/make lookfrom lookat vup 20 aspect-ratio aperture dist-to-focus)]
     (raytrace image-width image-height
               (for [j (range (dec image-height) -1 -1)
                     i (range 0 image-width)
@@ -64,7 +69,7 @@
                           ig (int (* 255.999 (vec/y corrected-color)))
                           ib (int (* 255.999 (vec/z corrected-color)))]]
                 (pixel-line ir ig ib))
-              "./images/background-sphere-camera-alternate-viewpoint-zooming-in")))
+              "./images/background-sphere-with-depth-of-field")))
 
 (defn create-ppm []
   (let [image-width 256,
