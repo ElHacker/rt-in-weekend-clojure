@@ -45,9 +45,16 @@
         num-samples 30
         max-depth 50
         R (Math/cos (/ Math/PI 4))
-        world [(hittable/->Sphere [(- R) 0 -1] R (material/->Lambertian [0.0 0.0 1.0]))
-               (hittable/->Sphere [R 0 -1] R (material/->Lambertian [1.0 0.0 0.0]))]
-        cam(camera/make 90 (float (/ image-width image-height)))]
+        world [(hittable/->Sphere [0 0 -1] 0.5 (material/->Lambertian [0.1 0.2 0.5]))
+               (hittable/->Sphere [0 -100.5 -1] 100 (material/->Lambertian [0.8 0.8 0.0]))
+               (hittable/->Sphere [1 0 -1] 0.5 (material/->Metal [0.8 0.6 0.2] 0.3))
+               (hittable/->Sphere [-1 0 -1] 0.5 (material/->Dialectric 1.5))
+               ; An interesting and easy trick with dielectric spheres is to
+               ; note that if you use a negative radius, the geometry is
+               ; unaffected, but the surface normal points inward. This can be
+               ; used as a bubble to make a hollow glass sphere:
+               (hittable/->Sphere [-1 0 -1] -0.45 (material/->Dialectric 1.5))]
+        cam(camera/make [-2.0 2.0 1.0] [0.0 0.0 -1.0] [0.0 1.0 0.0] 20 aspect-ratio)]
     (raytrace image-width image-height
               (for [j (range (dec image-height) -1 -1)
                     i (range 0 image-width)
@@ -57,7 +64,7 @@
                           ig (int (* 255.999 (vec/y corrected-color)))
                           ib (int (* 255.999 (vec/z corrected-color)))]]
                 (pixel-line ir ig ib))
-              "./images/background-sphere-camera-viewing-geometry")))
+              "./images/background-sphere-camera-alternate-viewpoint-zooming-in")))
 
 (defn create-ppm []
   (let [image-width 256,
